@@ -6,9 +6,7 @@ import java.sql.SQLException;
 
 public class Util {
 
-    static Connection connection;
-
-    public Util() throws SQLException {
+    public static Connection getConnection() {
 
         final String URL = "jdbc:mysql://localhost:3306/mydb";
         final String USER = "root";
@@ -17,13 +15,10 @@ public class Util {
         try {
             Driver driver = new com.mysql.cj.jdbc.Driver();
             DriverManager.registerDriver(driver);
-            connection = DriverManager.getConnection(URL, USER, PASSWORD);
+            return DriverManager.getConnection(URL, USER, PASSWORD);
         } catch (SQLException e) {
             System.out.println("Не удалось зарегестрировать драйвер");
         }
-    }
-
-    public static Connection getConnection() {
-        return connection;
+        return null;
     }
 }

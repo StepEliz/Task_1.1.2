@@ -1,24 +1,18 @@
 package jm.task.core.jdbc.dao;
 import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLSyntaxErrorException;
-import java.sql.Statement;
+
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoJDBCImpl implements UserDao {
     public UserDaoJDBCImpl() {
-        try {
-            Util util = new Util();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public void createUsersTable() throws SQLException {
-        try (Statement statement = Util.getConnection().createStatement()) {
+        try (Connection connection = Util.getConnection();
+              Statement statement = connection.createStatement()) {
             String customerTableQuery = "CREATE TABLE user " +
                     "(id INT AUTO_INCREMENT PRIMARY KEY, Name TEXT, LastName TEXT, Age INTEGER)";
             statement.executeUpdate(customerTableQuery);
@@ -29,7 +23,8 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void dropUsersTable() {
-        try (Statement statement = Util.getConnection().createStatement()) {
+        try (Connection connection = Util.getConnection();
+             Statement statement = connection.createStatement()) {
             String dropTableQuery = "DROP TABLE user";
             statement.executeUpdate(dropTableQuery);
         } catch (SQLException e) {
@@ -38,10 +33,13 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void saveUser(String name, String lastName, byte age) {
-        try (Statement statement = Util.getConnection().createStatement()) {
-            String insertTableQuery = "INSERT INTO user(Name, LastName, Age) " +
-                    "VALUES ('" + name + "', '" + lastName + "', '" + age + "')";
-            statement.executeUpdate(insertTableQuery);
+        String insertTableQuery = "INSERT INTO user(Name, LastName, Age) VALUES (?, ?, ?)";
+        try (Connection connection = Util.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(insertTableQuery)) {
+            preparedStatement.setString(1, name);
+            preparedStatement.setString(2, lastName);
+            preparedStatement.setByte(3, age);
+            preparedStatement.executeUpdate();
             System.out.println("User с именем — " + name + " добавлен в базу данных");
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -49,16 +47,19 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void removeUserById(long id) {
-        try (Statement statement = Util.getConnection().createStatement()) {
-            String removeUserByIdQuery = "DELETE FROM user WHERE id = " + id;
-            statement.executeUpdate(removeUserByIdQuery);
+        String removeUserByIdQuery = "DELETE FROM user WHERE id = ?";
+        try (Connection connection = Util.getConnection();
+              PreparedStatement preparedStatement = connection.prepareStatement(removeUserByIdQuery)) {
+            preparedStatement.setLong(1, id);
+            preparedStatement.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
     public List<User> getAllUsers() {
-        try (Statement statement = Util.getConnection().createStatement()) {
+        try (Connection connection = Util.getConnection();
+             Statement statement = connection.createStatement()) {
             String selectUserQuery = "SELECT * FROM user";
             ResultSet resultSet = statement.executeQuery(selectUserQuery);
             List<User> users = new ArrayList<>();
@@ -76,7 +77,8 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void cleanUsersTable() {
-        try (Statement statement = Util.getConnection().createStatement()) {
+        try (Connection connection = Util.getConnection();
+             Statement statement = connection.createStatement()) {
             String removeUserByIdQuery = "DELETE FROM user";
             statement.executeUpdate(removeUserByIdQuery);
         } catch (SQLException e) {
